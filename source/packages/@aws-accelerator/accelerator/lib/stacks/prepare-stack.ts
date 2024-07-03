@@ -24,6 +24,7 @@ import {
   GetPortfolioId,
   MoveAccounts,
   OrganizationalUnits,
+  OptInRegions,
 } from '@aws-accelerator/constructs';
 
 import { LoadAcceleratorConfigTable } from '../load-config-table';
@@ -485,6 +486,18 @@ export class PrepareStack extends AcceleratorStack {
         });
         options.controlTowerAccounts.node.addDependency(validation);
         options.controlTowerAccounts.node.addDependency(options.organizationAccounts);
+
+        this.logger.info(`Enable opt-in regions`);
+        const optInRegions = new OptInRegions(this, 'OptInRegions', {
+          kmsKey: options.cloudwatchKey,
+          logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
+          accountIds: options.props.accountsConfig.getAccountIds(),
+          homeRegion: options.props.globalConfig.homeRegion,
+          enabledRegions: options.props.globalConfig.enabledRegions,
+          managementAccountAccessRole: options.props.globalConfig.managementAccountAccessRole,
+          partition: options.props.partition,
+        });
+        optInRegions.node.addDependency(options.controlTowerAccounts);
 
         // cdk-nag suppressions
         const ctAccountsIam4SuppressionPaths = [
