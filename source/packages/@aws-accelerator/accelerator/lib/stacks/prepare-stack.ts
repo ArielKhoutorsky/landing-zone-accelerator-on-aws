@@ -487,18 +487,6 @@ export class PrepareStack extends AcceleratorStack {
         options.controlTowerAccounts.node.addDependency(validation);
         options.controlTowerAccounts.node.addDependency(options.organizationAccounts);
 
-        this.logger.info(`Enable opt-in regions`);
-        const optInRegions = new OptInRegions(this, 'OptInRegions', {
-          kmsKey: options.cloudwatchKey,
-          logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
-          accountIds: options.props.accountsConfig.getAccountIds(),
-          homeRegion: options.props.globalConfig.homeRegion,
-          enabledRegions: options.props.globalConfig.enabledRegions,
-          managementAccountAccessRole: options.props.globalConfig.managementAccountAccessRole,
-          partition: options.props.partition,
-        });
-        optInRegions.node.addDependency(options.controlTowerAccounts);
-
         // cdk-nag suppressions
         const ctAccountsIam4SuppressionPaths = [
           'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
@@ -521,6 +509,40 @@ export class PrepareStack extends AcceleratorStack {
 
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
         this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, ctAccountsIam5SuppressionPaths);
+
+        this.logger.info(`Enable opt-in regions`);
+        const optInRegions = new OptInRegions(this, 'OptInRegions', {
+          kmsKey: options.cloudwatchKey,
+          logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
+          accountIds: options.props.accountsConfig.getAccountIds(),
+          homeRegion: options.props.globalConfig.homeRegion,
+          enabledRegions: options.props.globalConfig.enabledRegions,
+          managementAccountAccessRole: options.props.globalConfig.managementAccountAccessRole,
+          partition: options.props.partition,
+        });
+        optInRegions.node.addDependency(options.controlTowerAccounts);
+
+        const optInRegionsIam4SuppressionPaths = [
+          'OptInRegions/OptInRegionsOnEvent/ServiceRole/Resource',
+          'OptInRegions/OptInRegionsIsComplete/ServiceRole/Resource',
+          'OptInRegions/OptInRegionsProvider/framework-onEvent/ServiceRole/Resource',
+          'OptInRegions/OptInRegionsProvider/framework-isComplete/ServiceRole/Resource',
+          'OptInRegions/OptInRegionsProvider/framework-onTimeout/ServiceRole/Resource',
+        ];
+
+        const optInRegionsIam5SuppressionPaths = [
+          'OptInRegions/OptInRegionsIsComplete/ServiceRole/DefaultPolicy/Resource',
+          'OptInRegions/OptInRegionsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+          'OptInRegions/OptInRegionsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+          'OptInRegions/OptInRegionsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+          'OptInRegions/OptInRegionsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+        ];
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM4, optInRegionsIam4SuppressionPaths);
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+        this.createNagSuppressionsInputs(NagSuppressionRuleIds.IAM5, optInRegionsIam5SuppressionPaths);
 
         // resources for control tower lifecycle events
         const controlTowerOuEventsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerOuEventsFunction', {
