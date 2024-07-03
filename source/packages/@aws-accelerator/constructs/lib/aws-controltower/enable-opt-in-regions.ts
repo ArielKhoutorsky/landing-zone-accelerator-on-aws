@@ -65,7 +65,7 @@ export class OptInRegions extends Construct {
     const OPT_IN_REGIONS = 'Custom::OptInRegions';
 
     this.onEvent = new cdk.aws_lambda.Function(this, 'OptInRegionsOnEvent', {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'opt-in-regions/dist')),
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-opt-in-regions/dist')),
       runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(1),
@@ -88,7 +88,7 @@ export class OptInRegions extends Construct {
     });
 
     this.isComplete = new cdk.aws_lambda.Function(this, 'OptInRegionsIsComplete', {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'opt-in-regions-status/dist')),
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-opt-in-regions-status/dist')),
       runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
