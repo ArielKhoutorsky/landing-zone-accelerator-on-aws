@@ -1,5 +1,5 @@
 /**
- * aws-controltower-create-accounts-status - lambda handler
+ * aws-controltower-opt-in-regions - lambda handler
  *
  * @param event
  * @returns
@@ -21,12 +21,10 @@ interface OptInRegionsProps {
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       IsComplete: boolean;
-      Status?: string;
-      Reason?: string;
     }
   | undefined
 > {
-  const props = event.ResourceProperties['Props'];
+  const props = event.ResourceProperties['props'];
 
   // Perform operation to check completion
   const IsComplete = await processAllAccountsRegions(props);

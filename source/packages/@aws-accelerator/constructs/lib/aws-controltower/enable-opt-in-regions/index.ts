@@ -12,27 +12,16 @@
  */
 
 /**
- * aws-controltower-create-accounts - lambda handler
+ * aws-opt-in-regions - lambda handler
  *
  * @param event
  * @returns
  */
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 
-interface OptInRegionsProps {
-  accountIds: string[];
-  homeRegion: string;
-  enabledRegions: string[];
-  managementAccountAccessRole: string;
-  partition: string;
-}
-
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       IsComplete: boolean;
-      Status: string;
-      Reason?: string;
-      Props?: OptInRegionsProps;
     }
   | undefined
 > {
@@ -41,15 +30,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case 'Update':
       return {
         IsComplete: false,
-        Status: 'SUCCESS',
-        Props: event.ResourceProperties['props'],
       };
 
     case 'Delete':
       // Do Nothing
       return {
         IsComplete: true,
-        Status: 'SUCCESS',
       };
   }
 }
