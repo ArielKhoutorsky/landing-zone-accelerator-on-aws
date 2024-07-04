@@ -119,7 +119,7 @@ export class OptInRegions extends Construct {
         props: {
           accountIds: props.accountIds,
           homeRegion: props.homeRegion,
-          enabedRegions: props.enabledRegions,
+          enabledRegions: props.enabledRegions,
           managementAccountAccessRole: props.managementAccountAccessRole,
           partition: props.partition,
         },
