@@ -531,6 +531,7 @@ export class PrepareStack extends AcceleratorStack {
         ];
 
         const optInRegionsIam5SuppressionPaths = [
+          'OptInRegions/OptInRegionsOnEvent/ServiceRole/DefaultPolicy/Resource',
           'OptInRegions/OptInRegionsIsComplete/ServiceRole/DefaultPolicy/Resource',
           'OptInRegions/OptInRegionsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
           'OptInRegions/OptInRegionsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
