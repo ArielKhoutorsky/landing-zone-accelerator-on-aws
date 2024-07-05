@@ -64,20 +64,11 @@ export class OptInRegions extends Construct {
 
     const OPT_IN_REGIONS = 'Custom::OptInRegions';
 
-    this.onEvent = new cdk.aws_lambda.Function(this, 'OptInRegionsOnEvent', {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-opt-in-regions/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      timeout: cdk.Duration.minutes(1),
-      description: 'Opt-in Regions onEvent handler',
-      environmentEncryption: props.kmsKey,
-    });
-
-    new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
-      logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
-      retention: props.logRetentionInDays,
-      encryptionKey: props.kmsKey,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    const assumeRolePolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'AllowAssumeRole',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['sts:AssumeRole'],
+      resources: [`*`],
     });
 
     const iamPolicy = new cdk.aws_iam.PolicyStatement({
@@ -87,6 +78,23 @@ export class OptInRegions extends Construct {
       resources: ['*'],
     });
 
+    this.onEvent = new cdk.aws_lambda.Function(this, 'OptInRegionsOnEvent', {
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-opt-in-regions/dist')),
+      runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      timeout: cdk.Duration.minutes(1),
+      description: 'Opt-in Regions onEvent handler',
+      environmentEncryption: props.kmsKey,
+      initialPolicy: [assumeRolePolicy],
+    });
+
+    const onEventLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
+      retention: props.logRetentionInDays,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     this.isComplete = new cdk.aws_lambda.Function(this, 'OptInRegionsIsComplete', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'enable-opt-in-regions-status/dist')),
       runtime: cdk.aws_lambda.Runtime.NODEJS_18_X,
@@ -94,10 +102,10 @@ export class OptInRegions extends Construct {
       timeout: cdk.Duration.minutes(5),
       description: 'Opt-in Regions isComplete handler',
       environmentEncryption: props.kmsKey,
-      initialPolicy: [iamPolicy],
+      initialPolicy: [assumeRolePolicy, iamPolicy],
     });
 
-    new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
+    const isCompleteLogGroup = new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
       logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
       retention: props.logRetentionInDays,
       encryptionKey: props.kmsKey,
@@ -126,6 +134,9 @@ export class OptInRegions extends Construct {
       },
     });
 
+    // Ensure that the LogGroup is created by Cloudformation prior to Lambda execution
+    resource.node.addDependency(isCompleteLogGroup);
+    resource.node.addDependency(onEventLogGroup);
     this.id = resource.ref;
   }
 }
