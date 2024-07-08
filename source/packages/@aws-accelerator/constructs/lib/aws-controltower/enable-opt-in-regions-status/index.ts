@@ -47,11 +47,11 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
         let crossAccountCredentials;
         if (accountId === props.managementAccountId) {
           crossAccountCredentials = await throttlingBackOff(() =>
-            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountAccessRole),
+            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, managementAccountRoleName),
           );
         } else {
           crossAccountCredentials = await throttlingBackOff(() =>
-            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, managementAccountRoleName),
+            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountAccessRole),
           );
         }
         const credentials = {
