@@ -36,13 +36,24 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 }
 
 async function processAllAccountsRegions(props: OptInRegionsProps) {
+  const managementAccountRoleName = process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'];
+  if (!managementAccountRoleName) {
+    throw new Error("The environment variable 'MANAGEMENT_ACCOUNT_ROLE_NAME' is not set");
+  }
   const promises = [];
   for (const accountId of props.accountIds) {
     for (const enabledRegion of props.enabledRegions) {
-      if (OptInRegions.includes(enabledRegion) && accountId !== props.managementAccountId) {
-        const crossAccountCredentials = await throttlingBackOff(() =>
-          getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountAccessRole),
-        );
+      if (OptInRegions.includes(enabledRegion)) {
+        let crossAccountCredentials;
+        if (accountId === props.managementAccountId) {
+          crossAccountCredentials = await throttlingBackOff(() =>
+            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountAccessRole),
+          );
+        } else {
+          crossAccountCredentials = await throttlingBackOff(() =>
+            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, managementAccountRoleName),
+          );
+        }
         const credentials = {
           accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
           secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
