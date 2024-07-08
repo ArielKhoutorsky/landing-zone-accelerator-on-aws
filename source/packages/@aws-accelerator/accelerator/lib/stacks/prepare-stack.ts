@@ -514,6 +514,7 @@ export class PrepareStack extends AcceleratorStack {
         const optInRegions = new OptInRegions(this, 'OptInRegions', {
           kmsKey: options.cloudwatchKey,
           logRetentionInDays: options.props.globalConfig.cloudwatchLogRetentionInDays,
+          managementAccountId: options.props.accountsConfig.getManagementAccountId(),
           accountIds: options.props.accountsConfig.getAccountIds(),
           homeRegion: options.props.globalConfig.homeRegion,
           enabledRegions: options.props.globalConfig.enabledRegions,

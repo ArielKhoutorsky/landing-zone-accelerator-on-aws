@@ -29,6 +29,10 @@ export interface OptInRegionsProps {
    */
   readonly logRetentionInDays: number;
   /**
+   * Custom resource lambda management account id
+   */
+  readonly managementAccountId: string;
+  /**
    * Custom resource lambda log account ids
    */
   readonly accountIds: string[];
@@ -125,6 +129,7 @@ export class OptInRegions extends Construct {
       properties: {
         uuid: uuidv4(),
         props: {
+          managementAccountId: props.managementAccountId,
           accountIds: props.accountIds,
           homeRegion: props.homeRegion,
           enabledRegions: props.enabledRegions,

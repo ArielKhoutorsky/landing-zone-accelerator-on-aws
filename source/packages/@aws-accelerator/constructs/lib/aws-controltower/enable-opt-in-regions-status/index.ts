@@ -11,6 +11,7 @@ import { OptInRegions } from '@aws-accelerator/utils/lib/regions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 
 interface OptInRegionsProps {
+  managementAccountId: string;
   accountIds: string[];
   homeRegion: string;
   enabledRegions: string[];
@@ -38,7 +39,7 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
   const promises = [];
   for (const accountId of props.accountIds) {
     for (const enabledRegion of props.enabledRegions) {
-      if (OptInRegions.includes(enabledRegion)) {
+      if (OptInRegions.includes(enabledRegion) && accountId !== props.managementAccountId) {
         const crossAccountCredentials = await throttlingBackOff(() =>
           getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountAccessRole),
         );
