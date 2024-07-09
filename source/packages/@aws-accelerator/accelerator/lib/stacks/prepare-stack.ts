@@ -520,7 +520,6 @@ export class PrepareStack extends AcceleratorStack {
           enabledRegions: options.props.globalConfig.enabledRegions,
           managementAccountAccessRole: options.props.globalConfig.managementAccountAccessRole,
           partition: options.props.partition,
-          managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
         });
         optInRegions.node.addDependency(options.controlTowerAccounts);
 

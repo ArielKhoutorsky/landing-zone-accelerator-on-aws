@@ -17,7 +17,6 @@ interface OptInRegionsProps {
   enabledRegions: string[];
   managementAccountAccessRole: string;
   partition: string;
-  managementAccountRoleName: string;
 }
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<

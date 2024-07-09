@@ -52,10 +52,6 @@ export interface OptInRegionsProps {
    * Custom resource lambda AWS partition
    */
   readonly partition: string;
-  /**
-   * Custom resource lambda management account role name
-   */
-  readonly managementAccountRoleName: string | undefined;
 }
 
 /**
@@ -139,7 +135,6 @@ export class OptInRegions extends Construct {
           enabledRegions: props.enabledRegions,
           managementAccountAccessRole: props.managementAccountAccessRole,
           partition: props.partition,
-          managementAccountRoleName: props.managementAccountRoleName,
         },
       },
     });
