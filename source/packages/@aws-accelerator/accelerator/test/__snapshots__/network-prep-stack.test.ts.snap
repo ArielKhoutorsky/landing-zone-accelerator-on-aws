@@ -2092,7 +2092,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
             "Value": "Network-Main-2",
           },
         ],
-        "TransitGatewayCidrBlocks": [],
+        "TransitGatewayCidrBlocks": [
+          "10.50.0.0/20",
+        ],
         "VpnEcmpSupport": "enable",
       },
       "Type": "AWS::EC2::TransitGateway",
@@ -2260,7 +2262,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.8.0",
+        "Value": "1.8.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
