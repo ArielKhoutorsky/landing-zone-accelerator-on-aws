@@ -42,22 +42,21 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
   for (const accountId of props.accountIds) {
     for (const enabledRegion of props.enabledRegions) {
       if (OptInRegions.includes(enabledRegion)) {
-        let crossAccountCredentials;
+        let accountClient;
         if (accountId === props.managementAccountId) {
-          crossAccountCredentials = await throttlingBackOff(() =>
-            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountRoleName),
-          );
+          accountClient = new AccountClient({ region: props.homeRegion }) as AccountClient;
         } else {
-          crossAccountCredentials = await throttlingBackOff(() =>
+          const crossAccountCredentials = await throttlingBackOff(() =>
             getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountAccessRole),
           );
+          const credentials = {
+            accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
+            secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
+            sessionToken: crossAccountCredentials.Credentials!.SessionToken!,
+          };
+          accountClient = new AccountClient({ credentials, region: props.homeRegion }) as AccountClient;
         }
-        const credentials = {
-          accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
-          secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
-          sessionToken: crossAccountCredentials.Credentials!.SessionToken!,
-        };
-        promises.push(processAccountRegion(accountId, props.homeRegion, enabledRegion, credentials));
+        promises.push(processAccountRegion(accountId, accountClient, enabledRegion));
       }
     }
   }
@@ -65,17 +64,7 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
   return results.every(state => state.isComplete);
 }
 
-async function processAccountRegion(
-  accountId: string,
-  homeRegion: string,
-  optinRegion: string,
-  credentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    sessionToken: string;
-  },
-) {
-  const accountClient = new AccountClient({ credentials, region: homeRegion }) as AccountClient;
+async function processAccountRegion(accountId: string, accountClient: AccountClient, optinRegion: string) {
   try {
     const optStatus = await checkRegionOptStatus(accountClient, optinRegion);
     console.log(`Current opt status for region ${optinRegion} for account id ${accountId}: ${optStatus}`);
