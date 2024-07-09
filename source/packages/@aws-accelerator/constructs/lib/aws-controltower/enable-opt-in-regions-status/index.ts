@@ -17,6 +17,7 @@ interface OptInRegionsProps {
   enabledRegions: string[];
   managementAccountAccessRole: string;
   partition: string;
+  managementAccountRoleName: string;
 }
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
@@ -36,10 +37,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 }
 
 async function processAllAccountsRegions(props: OptInRegionsProps) {
-  const managementAccountRoleName = process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'];
-  if (!managementAccountRoleName) {
-    throw new Error("The environment variable 'MANAGEMENT_ACCOUNT_ROLE_NAME' is not set");
-  }
+  console.log(props);
   const promises = [];
   for (const accountId of props.accountIds) {
     for (const enabledRegion of props.enabledRegions) {
@@ -47,7 +45,7 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
         let crossAccountCredentials;
         if (accountId === props.managementAccountId) {
           crossAccountCredentials = await throttlingBackOff(() =>
-            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, managementAccountRoleName),
+            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountRoleName),
           );
         } else {
           crossAccountCredentials = await throttlingBackOff(() =>
