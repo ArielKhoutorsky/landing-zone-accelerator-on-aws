@@ -662,10 +662,10 @@ export class PrepareStack extends AcceleratorStack {
         partition: options.props.partition,
       });
 
+      optInRegions.node.addDependency(options.organizationAccounts);
       if (options.props.globalConfig.controlTower.enable && options.controlTowerAccounts) {
         optInRegions.node.addDependency(options.controlTowerAccounts);
       }
-      optInRegions.node.addDependency(options.organizationAccounts);
 
       const optInRegionsIam4SuppressionPaths = [
         'OptInRegions/OptInRegionsOnEvent/ServiceRole/Resource',
