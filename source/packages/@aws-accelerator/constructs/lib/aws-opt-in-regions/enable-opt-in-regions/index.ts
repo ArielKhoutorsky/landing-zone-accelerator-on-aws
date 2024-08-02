@@ -18,6 +18,7 @@
  * @returns
  */
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
@@ -28,6 +29,11 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
+      const { accountIds, globalRegion } = event.ResourceProperties['props'] as {
+        accountIds: string[];
+        globalRegion: string;
+      };
+      await Promise.all(accountIds.map(accountId => setStsTokenPreferences(accountId, globalRegion)));
       return {
         IsComplete: false,
       };

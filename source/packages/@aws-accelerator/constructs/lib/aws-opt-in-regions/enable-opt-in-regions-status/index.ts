@@ -5,10 +5,11 @@
  * @returns
  */
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
-import { getCrossAccountCredentials } from '@aws-accelerator/utils/lib/common-functions';
 import { AccountClient, GetRegionOptStatusCommand, EnableRegionCommand } from '@aws-sdk/client-account';
 import { OptInRegions } from '@aws-accelerator/utils/lib/regions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
+import PQueue from 'p-queue';
 
 interface OptInRegionsProps {
   managementAccountId: string;
@@ -37,39 +38,32 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
 async function processAllAccountsRegions(props: OptInRegionsProps) {
   console.log(props);
+  const solutionId: string = process.env['SOLUTION_ID'] ?? '';
+  const queue = new PQueue({ concurrency: 20 });
   const promises = [];
+  const accountClient = new AccountClient({
+    region: props.homeRegion,
+    customUserAgent: solutionId,
+    retryStrategy: setRetryStrategy(),
+  }) as AccountClient;
   for (const accountId of props.accountIds) {
-    for (const enabledRegion of props.enabledRegions) {
-      if (OptInRegions.includes(enabledRegion)) {
-        let accountClient;
-        if (accountId === props.managementAccountId) {
-          accountClient = new AccountClient({ region: props.homeRegion }) as AccountClient;
-        } else {
-          const crossAccountCredentials = await throttlingBackOff(() =>
-            getCrossAccountCredentials(accountId, props.homeRegion, props.partition, props.managementAccountAccessRole),
-          );
-          const credentials = {
-            accessKeyId: crossAccountCredentials.Credentials!.AccessKeyId!,
-            secretAccessKey: crossAccountCredentials.Credentials!.SecretAccessKey!,
-            sessionToken: crossAccountCredentials.Credentials!.SessionToken!,
-          };
-          accountClient = new AccountClient({ credentials, region: props.homeRegion }) as AccountClient;
-        }
-        promises.push(processAccountRegion(accountId, accountClient, enabledRegion));
-      }
+    for (const enabledRegion of props.enabledRegions.filter(region => OptInRegions.includes(region)) ?? []) {
+      const promise = queue.add(() => processAccountRegion(accountId, accountClient, enabledRegion));
+      promises.push(promise);
     }
   }
+
   const results = await Promise.all(promises);
   return results.every(state => state.isComplete);
 }
 
 async function processAccountRegion(accountId: string, accountClient: AccountClient, optinRegion: string) {
   try {
-    const optStatus = await checkRegionOptStatus(accountClient, optinRegion);
+    const optStatus = await checkRegionOptStatus(accountClient, optinRegion, accountId);
     console.log(`Current opt status for region ${optinRegion} for account id ${accountId}: ${optStatus}`);
     if (optStatus === 'DISABLED') {
       console.log(`Opt-in initialized for ${optinRegion} for account id ${accountId}`);
-      await optInRegion(accountClient, optinRegion);
+      await enableOptInRegion(accountClient, optinRegion, accountId);
       return { accountId, isComplete: false };
     } else if (optStatus === 'ENABLING' || optStatus === 'DISABLING') {
       console.log(`Opt-in in progress for ${optinRegion} for account id ${accountId}`);
@@ -82,14 +76,18 @@ async function processAccountRegion(accountId: string, accountClient: AccountCli
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
   ) {
-    console.log(`Error processing account id ${accountId}: ${e.message}`);
+    console.log(`Error opting in to region ${optinRegion} in account ${accountId}: ${e.message}`);
     return { accountId, isComplete: false };
   }
 }
 
-async function checkRegionOptStatus(client: AccountClient, optinRegion: string): Promise<string | undefined> {
+async function checkRegionOptStatus(
+  client: AccountClient,
+  optinRegion: string,
+  accountId: string,
+): Promise<string | undefined> {
   try {
-    const command = new GetRegionOptStatusCommand({ RegionName: optinRegion });
+    const command = new GetRegionOptStatusCommand({ RegionName: optinRegion, AccountId: accountId });
     const response = await throttlingBackOff(() => client.send(command));
     return response.RegionOptStatus;
   } catch (
@@ -101,9 +99,9 @@ async function checkRegionOptStatus(client: AccountClient, optinRegion: string):
   }
 }
 
-async function optInRegion(client: AccountClient, optinRegion: string): Promise<void> {
+async function enableOptInRegion(client: AccountClient, optinRegion: string, accountId: string): Promise<void> {
   try {
-    const command = new EnableRegionCommand({ RegionName: optinRegion });
+    const command = new EnableRegionCommand({ RegionName: optinRegion, AccountId: accountId });
     await throttlingBackOff(() => client.send(command));
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

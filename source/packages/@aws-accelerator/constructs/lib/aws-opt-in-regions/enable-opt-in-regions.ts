@@ -52,6 +52,10 @@ export interface OptInRegionsProps {
    * Custom resource lambda AWS partition
    */
   readonly partition: string;
+  /**
+   * Custom resource lambda global region
+   */
+  readonly globalRegion: string;
 }
 
 /**
@@ -68,17 +72,17 @@ export class OptInRegions extends Construct {
 
     const OPT_IN_REGIONS = 'Custom::OptInRegions';
 
-    const assumeRolePolicy = new cdk.aws_iam.PolicyStatement({
-      sid: 'AllowAssumeRole',
-      effect: cdk.aws_iam.Effect.ALLOW,
-      actions: ['sts:AssumeRole'],
-      resources: [`*`],
-    });
-
-    const iamPolicy = new cdk.aws_iam.PolicyStatement({
-      sid: 'IAMPolicy',
+    const AccountOperationsPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'AccountOperations',
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: ['account:ListRegions', 'account:EnableRegion', 'account:GetRegionOptStatus'],
+      resources: ['*'],
+    });
+
+    const stsPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'stsTokenPreference',
+      effect: cdk.aws_iam.Effect.ALLOW,
+      actions: ['iam:GetAccountSummary', 'iam:SetSecurityTokenServicePreferences'],
       resources: ['*'],
     });
 
@@ -89,7 +93,7 @@ export class OptInRegions extends Construct {
       timeout: cdk.Duration.minutes(1),
       description: 'Opt-in Regions onEvent handler',
       environmentEncryption: props.kmsKey,
-      initialPolicy: [assumeRolePolicy],
+      initialPolicy: [stsPolicy],
     });
 
     const onEventLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
@@ -106,7 +110,7 @@ export class OptInRegions extends Construct {
       timeout: cdk.Duration.minutes(5),
       description: 'Opt-in Regions isComplete handler',
       environmentEncryption: props.kmsKey,
-      initialPolicy: [assumeRolePolicy, iamPolicy],
+      initialPolicy: [AccountOperationsPolicy],
     });
 
     const isCompleteLogGroup = new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
@@ -120,7 +124,7 @@ export class OptInRegions extends Construct {
       onEventHandler: this.onEvent,
       isCompleteHandler: this.isComplete,
       queryInterval: cdk.Duration.seconds(300),
-      totalTimeout: cdk.Duration.hours(4),
+      totalTimeout: cdk.Duration.hours(1),
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
@@ -135,6 +139,7 @@ export class OptInRegions extends Construct {
           enabledRegions: props.enabledRegions,
           managementAccountAccessRole: props.managementAccountAccessRole,
           partition: props.partition,
+          globalRegion: props.globalRegion,
         },
       },
     });

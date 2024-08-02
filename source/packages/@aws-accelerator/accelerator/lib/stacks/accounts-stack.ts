@@ -180,6 +180,7 @@ export class AccountsStack extends AcceleratorStack {
       enabledRegions: props.globalConfig.enabledRegions,
       managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
       partition: props.partition,
+      globalRegion: props.globalRegion,
     });
 
     const optInRegionsIam4SuppressionPaths = [
