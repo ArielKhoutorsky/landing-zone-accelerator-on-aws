@@ -9,7 +9,7 @@ import { AccountClient, GetRegionOptStatusCommand, EnableRegionCommand } from '@
 import { OptInRegions } from '@aws-accelerator/utils/lib/regions';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
-import PQueue from 'p-queue';
+import pLimit from 'p-limit';
 
 interface OptInRegionsProps {
   managementAccountId: string;
@@ -39,7 +39,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 async function processAllAccountsRegions(props: OptInRegionsProps) {
   console.log(props);
   const solutionId: string = process.env['SOLUTION_ID'] ?? '';
-  const queue = new PQueue({ concurrency: 20 });
+  const limit = pLimit(2);
   const promises = [];
   const accountClient = new AccountClient({
     region: props.homeRegion,
@@ -48,7 +48,7 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
   }) as AccountClient;
   for (const accountId of props.accountIds) {
     for (const enabledRegion of props.enabledRegions.filter(region => OptInRegions.includes(region)) ?? []) {
-      const promise = queue.add(() => processAccountRegion(accountId, accountClient, enabledRegion));
+      const promise = limit(() => processAccountRegion(accountId, accountClient, enabledRegion));
       promises.push(promise);
     }
   }
