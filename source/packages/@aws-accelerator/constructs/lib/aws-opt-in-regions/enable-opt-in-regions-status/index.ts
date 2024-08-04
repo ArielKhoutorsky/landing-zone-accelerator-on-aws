@@ -20,6 +20,8 @@ interface OptInRegionsProps {
   partition: string;
 }
 
+const solutionId: string = process.env['SOLUTION_ID'] ?? '';
+
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       IsComplete: boolean;
@@ -38,7 +40,6 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
 async function processAllAccountsRegions(props: OptInRegionsProps) {
   console.log(props);
-  const solutionId: string = process.env['SOLUTION_ID'] ?? '';
   const limit = pLimit(2);
   const promises = [];
   const accountClient = new AccountClient({
