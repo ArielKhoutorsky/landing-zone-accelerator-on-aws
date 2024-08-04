@@ -82,7 +82,11 @@ export class OptInRegions extends Construct {
     const stsPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'stsTokenPreference',
       effect: cdk.aws_iam.Effect.ALLOW,
-      actions: ['iam:GetAccountSummary', 'iam:SetSecurityTokenServicePreferences'],
+      actions: [
+        'organizations:EnableAWSServiceAccess',
+        'iam:GetAccountSummary',
+        'iam:SetSecurityTokenServicePreferences',
+      ],
       resources: ['*'],
     });
 

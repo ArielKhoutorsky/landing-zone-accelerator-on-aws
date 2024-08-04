@@ -19,6 +19,7 @@
  */
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
+import { OrganizationsClient, EnableAWSServiceAccessCommand } from '@aws-sdk/client-organizations';
 
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
@@ -33,6 +34,16 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         accountIds: string[];
         globalRegion: string;
       };
+      const organizationsClient = new OrganizationsClient({});
+      try {
+        const command = new EnableAWSServiceAccessCommand({
+          ServicePrincipal: 'account.amazonaws.com',
+        });
+        const response = await organizationsClient.send(command);
+        console.log('Trusted access enabled:', response);
+      } catch (error) {
+        console.error('Error enabling trusted access:', error);
+      }
       await Promise.all(accountIds.map(accountId => setStsTokenPreferences(accountId, globalRegion)));
       return {
         IsComplete: false,
