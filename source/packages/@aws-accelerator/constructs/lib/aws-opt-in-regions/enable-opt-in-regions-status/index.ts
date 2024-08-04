@@ -49,7 +49,12 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
   }) as AccountClient;
   for (const accountId of props.accountIds) {
     for (const enabledRegion of props.enabledRegions.filter(region => OptInRegions.includes(region)) ?? []) {
-      const promise = limit(() => processAccountRegion(accountId, accountClient, enabledRegion));
+      let promise;
+      if (accountId === props.managementAccountId) {
+        promise = limit(() => processAccountRegion(undefined, accountClient, enabledRegion));
+      } else {
+        promise = limit(() => processAccountRegion(accountId, accountClient, enabledRegion));
+      }
       promises.push(promise);
     }
   }
@@ -58,7 +63,7 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
   return results.every(state => state.isComplete);
 }
 
-async function processAccountRegion(accountId: string, accountClient: AccountClient, optinRegion: string) {
+async function processAccountRegion(accountId: string | undefined, accountClient: AccountClient, optinRegion: string) {
   try {
     const optStatus = await checkRegionOptStatus(accountClient, optinRegion, accountId);
     console.log(`Current opt status for region ${optinRegion} for account id ${accountId}: ${optStatus}`);
@@ -85,7 +90,7 @@ async function processAccountRegion(accountId: string, accountClient: AccountCli
 async function checkRegionOptStatus(
   client: AccountClient,
   optinRegion: string,
-  accountId: string,
+  accountId: string | undefined,
 ): Promise<string | undefined> {
   try {
     const command = new GetRegionOptStatusCommand({ RegionName: optinRegion, AccountId: accountId });
@@ -100,7 +105,11 @@ async function checkRegionOptStatus(
   }
 }
 
-async function enableOptInRegion(client: AccountClient, optinRegion: string, accountId: string): Promise<void> {
+async function enableOptInRegion(
+  client: AccountClient,
+  optinRegion: string,
+  accountId: string | undefined,
+): Promise<void> {
   try {
     const command = new EnableRegionCommand({ RegionName: optinRegion, AccountId: accountId });
     await throttlingBackOff(() => client.send(command));
