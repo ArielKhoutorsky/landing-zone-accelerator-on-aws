@@ -40,7 +40,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 
 async function processAllAccountsRegions(props: OptInRegionsProps) {
   console.log(props);
-  const limit = pLimit(2);
+  const limit = pLimit(20);
   const promises = [];
   const accountClient = new AccountClient({
     region: props.homeRegion,
