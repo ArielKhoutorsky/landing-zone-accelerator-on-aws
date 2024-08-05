@@ -45,14 +45,6 @@ export interface OptInRegionsProps {
    */
   readonly enabledRegions: string[];
   /**
-   * Custom resource lambda management account access role
-   */
-  readonly managementAccountAccessRole: string;
-  /**
-   * Custom resource lambda AWS partition
-   */
-  readonly partition: string;
-  /**
    * Custom resource lambda global region
    */
   readonly globalRegion: string;
@@ -79,8 +71,8 @@ export class OptInRegions extends Construct {
       resources: ['*'],
     });
 
-    const stsPolicy = new cdk.aws_iam.PolicyStatement({
-      sid: 'stsTokenPreference',
+    const serviceAccessAndTokenPolicy = new cdk.aws_iam.PolicyStatement({
+      sid: 'serviceAccessAndToken',
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: [
         'organizations:EnableAWSServiceAccess',
@@ -97,7 +89,7 @@ export class OptInRegions extends Construct {
       timeout: cdk.Duration.minutes(1),
       description: 'Opt-in Regions onEvent handler',
       environmentEncryption: props.kmsKey,
-      initialPolicy: [stsPolicy],
+      initialPolicy: [serviceAccessAndTokenPolicy],
     });
 
     const onEventLogGroup = new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
@@ -141,8 +133,6 @@ export class OptInRegions extends Construct {
           accountIds: props.accountIds,
           homeRegion: props.homeRegion,
           enabledRegions: props.enabledRegions,
-          managementAccountAccessRole: props.managementAccountAccessRole,
-          partition: props.partition,
           globalRegion: props.globalRegion,
         },
       },

@@ -16,8 +16,6 @@ interface OptInRegionsProps {
   accountIds: string[];
   homeRegion: string;
   enabledRegions: string[];
-  managementAccountAccessRole: string;
-  partition: string;
 }
 
 const solutionId: string = process.env['SOLUTION_ID'] ?? '';

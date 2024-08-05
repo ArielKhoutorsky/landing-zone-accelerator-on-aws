@@ -30,7 +30,10 @@ export class AccountsStack extends AcceleratorStack {
 
     this.keyResource = new KmsKeyResource(this, props);
 
-    this.enableOptInRegions(props);
+    // enable opt-in regions for organizations
+    if (!props.globalConfig.controlTower.enable) {
+      this.enableOptInRegions(props);
+    }
 
     //
     // Create MoveAccountRule
@@ -178,8 +181,6 @@ export class AccountsStack extends AcceleratorStack {
       accountIds: props.accountsConfig.getAccountIds(),
       homeRegion: props.globalConfig.homeRegion,
       enabledRegions: props.globalConfig.enabledRegions,
-      managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
-      partition: props.partition,
       globalRegion: props.globalRegion,
     });
 

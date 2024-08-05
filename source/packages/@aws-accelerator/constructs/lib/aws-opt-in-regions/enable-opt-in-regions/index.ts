@@ -32,26 +32,26 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const { accountIds, globalRegion, managementAccountAccessRole } = event.ResourceProperties['props'] as {
+      const { accountIds, globalRegion } = event.ResourceProperties['props'] as {
         accountIds: string[];
         globalRegion: string;
-        managementAccountAccessRole: string;
       };
-      if (managementAccountAccessRole === 'OrganizationAccountAccessRole') {
-        // enable trust access
-        const organizationsClient = new OrganizationsClient({ customUserAgent: solutionId });
-        try {
-          const command = new EnableAWSServiceAccessCommand({
-            ServicePrincipal: 'account.amazonaws.com',
-          });
-          const response = await organizationsClient.send(command);
-          console.log('Trusted access enabled:', response);
-        } catch (error) {
-          console.error('Error enabling trusted access:', error);
-        }
+
+      // enable trust access
+      const organizationsClient = new OrganizationsClient({ customUserAgent: solutionId });
+      try {
+        const command = new EnableAWSServiceAccessCommand({
+          ServicePrincipal: 'account.amazonaws.com',
+        });
+        const response = await organizationsClient.send(command);
+        console.log('Trusted access enabled:', response);
+      } catch (error) {
+        console.error('Error enabling trusted access:', error);
       }
+
       // update STS tokens to V2
       await Promise.all(accountIds.map(accountId => setStsTokenPreferences(accountId, globalRegion)));
+
       return {
         IsComplete: false,
       };
