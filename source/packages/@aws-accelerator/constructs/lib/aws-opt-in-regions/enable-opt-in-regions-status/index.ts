@@ -66,23 +66,23 @@ async function processAllAccountsRegions(props: OptInRegionsProps) {
 async function processAccountRegion(accountId: string | undefined, accountClient: AccountClient, optinRegion: string) {
   try {
     const optStatus = await checkRegionOptStatus(accountClient, optinRegion, accountId);
-    console.log(`Current opt status for region ${optinRegion} for account id ${accountId}: ${optStatus}`);
+    console.log(`Current opt status for region ${optinRegion} for account ${accountId || 'management'}: ${optStatus}`);
     if (optStatus === 'DISABLED') {
-      console.log(`Opt-in initialized for ${optinRegion} for account id ${accountId}`);
+      console.log(`Opt-in initialized for ${optinRegion} for account ${accountId || 'management'}`);
       await enableOptInRegion(accountClient, optinRegion, accountId);
       return { accountId, isComplete: false };
     } else if (optStatus === 'ENABLING' || optStatus === 'DISABLING') {
-      console.log(`Opt-in in progress for ${optinRegion} for account id ${accountId}`);
+      console.log(`Opt-in in progress for ${optinRegion} for account ${accountId || 'management'}`);
       return { accountId, isComplete: false };
     } else {
-      console.log(`Opt-in in complete for ${optinRegion} for account id ${accountId}`);
+      console.log(`Opt-in in complete for ${optinRegion} for account ${accountId || 'management'}`);
       return { accountId, isComplete: true };
     }
   } catch (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
   ) {
-    console.log(`Error opting in to region ${optinRegion} in account ${accountId}: ${e.message}`);
+    console.log(`Error opting in to region ${optinRegion} in account ${accountId || 'management'}: ${e.message}`);
     return { accountId, isComplete: false };
   }
 }
@@ -100,7 +100,7 @@ async function checkRegionOptStatus(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
   ) {
-    console.log(`Error checking region opt status: ${e.message}`);
+    console.log(`Error checking region opt status for ${accountId || 'management'} : ${e.message}`);
     throw e;
   }
 }
@@ -117,7 +117,7 @@ async function enableOptInRegion(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     e: any
   ) {
-    console.log(`Error opting in to region ${optinRegion}: ${e.message}`);
+    console.log(`Error opting in to region ${optinRegion} for ${accountId || 'management'} : ${e.message}`);
     throw e;
   }
 }
