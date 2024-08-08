@@ -19,6 +19,9 @@
     "test": "jest --coverage --ci --passWithNoTests",
     "testreport": ""
   },
+  "dependencies": {
+    "@aws-sdk/client-organizations": "3.410.0"
+  },
   "devDependencies": {
     "@types/jest": "29.4.0",
     "@types/node": "18.14.0",

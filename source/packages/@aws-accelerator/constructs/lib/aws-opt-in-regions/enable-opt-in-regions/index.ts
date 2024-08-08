@@ -20,6 +20,7 @@
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
 import { setStsTokenPreferences } from '@aws-accelerator/utils/lib/set-token-preferences';
 import { OrganizationsClient, EnableAWSServiceAccessCommand } from '@aws-sdk/client-organizations';
+import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 const solutionId: string = process.env['SOLUTION_ID'] ?? '';
 
@@ -38,7 +39,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       };
 
       // enable trust access
-      const organizationsClient = new OrganizationsClient({ customUserAgent: solutionId });
+      const organizationsClient = new OrganizationsClient({
+        customUserAgent: solutionId,
+        retryStrategy: setRetryStrategy(),
+      });
       try {
         const command = new EnableAWSServiceAccessCommand({
           ServicePrincipal: 'account.amazonaws.com',

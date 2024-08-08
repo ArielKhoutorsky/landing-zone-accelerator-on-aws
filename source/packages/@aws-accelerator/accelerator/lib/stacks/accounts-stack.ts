@@ -30,8 +30,7 @@ export class AccountsStack extends AcceleratorStack {
 
     this.keyResource = new KmsKeyResource(this, props);
 
-    // enable opt-in regions for organizations
-    if (!props.globalConfig.controlTower.enable) {
+    if (!props.globalConfig.enableOptInRegions) {
       this.enableOptInRegions(props);
     }
 

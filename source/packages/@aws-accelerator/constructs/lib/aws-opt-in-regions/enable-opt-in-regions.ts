@@ -119,8 +119,8 @@ export class OptInRegions extends Construct {
     this.provider = new cdk.custom_resources.Provider(this, 'OptInRegionsProvider', {
       onEventHandler: this.onEvent,
       isCompleteHandler: this.isComplete,
-      queryInterval: cdk.Duration.seconds(300),
-      totalTimeout: cdk.Duration.hours(1),
+      queryInterval: cdk.Duration.seconds(120),
+      totalTimeout: cdk.Duration.minutes(30),
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
